@@ -6,37 +6,29 @@ import json
 import gspread
 from google.oauth2.service_account import Credentials
 
-# 1. Telegram bot token
-TOKEN = "8183691124:AAHEtcYoIGeRGO4DBHsGnY4pU"
+TOKEN = "7976266533:AAH66Fal4sCsKwtlAmUiK5tzSGYMR6f86NY"
 
-# 2. Remove webhook to avoid polling conflict
 bot = Bot(token=TOKEN)
 bot.delete_webhook(drop_pending_updates=True)
 
-# 3. Load Google credentials
 creds_json = os.environ.get("GOOGLE_CREDENTIALS")
 if not creds_json:
     print("❌ GOOGLE_CREDENTIALS env var not found!")
     exit(1)
 creds_info = json.loads(creds_json)
 
-# 4. Define scopes
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = Credentials.from_service_account_info(creds_info, scopes=SCOPES)
 
-# 5. Authorize gspread
 client = gspread.authorize(creds)
-sheet = client.open_by_key("12H87uDfhvYDyfuCMEHZJ4WDdcIvHpjn1xp2luvrbLaM").worksheet("realauto")
+sheet = client.open_by_key("YOUR_SHEET_KEY").worksheet("realauto")
 
-# 6. Setup logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Conversation states
 ASK_CAR_NUMBER, ASK_CAR_YEAR, GET_IMAGES, GET_INITIAL, GET_3, GET_4, GET_5 = range(7)
 
 def format_summa(summa, point_format=False):
-    """Raqamni 6.100.000 yoki 6 100 000 ko‘rinishida formatlash uchun"""
     try:
         s = "{:,}".format(int(summa)).replace(",", " ")
         if point_format:
@@ -59,13 +51,15 @@ def post_yasash(update: Update, context: CallbackContext):
 def ask_car_number(update: Update, context: CallbackContext):
     car_number = update.message.text.strip().replace(" ", "").upper()
     rows = sheet.get_all_values()
-    # D ustun = index 3, E ustun = index 4 (Excel'da A=0, B=1, C=2, D=3, E=4)
-    idx_number = 3   # D ustun
-    idx_year = 4     # E ustun
-    idx_model = 1    # B ustun (model)
-    idx_kraska = 6   # G ustun
-    idx_probeg = 5   # F ustun
-    idx_narx = 7     # H ustun
+    # Ustun indekslari
+    idx_model = 1  # B
+    idx_year = 4   # E
+    idx_number = 3 # D
+    idx_kraska = 6 # G
+    idx_probeg = 5 # F
+    idx_yog = 15   # O (Yoqilg'i turi)
+    idx_olingan_narx = 7 # G
+    idx_sot_narx = 8     # H
 
     matches = [
         row for row in rows[1:]
@@ -83,7 +77,9 @@ def ask_car_number(update: Update, context: CallbackContext):
             'year': selected[idx_year] if len(selected) > idx_year else 'NOMA’LUM',
             'kraska': selected[idx_kraska] if len(selected) > idx_kraska else 'NOMA’LUM',
             'probeg': selected[idx_probeg] if len(selected) > idx_probeg else 'NOMA’LUM',
-            'narx': selected[idx_narx] if len(selected) > idx_narx else 'NOMA’LUM'
+            'yoqilgi': selected[idx_yog] if len(selected) > idx_yog else 'NOMA’LUM',
+            'olingan_narx': selected[idx_olingan_narx] if len(selected) > idx_olingan_narx else 'NOMA’LUM',
+            'sot_narx': selected[idx_sot_narx] if len(selected) > idx_sot_narx else 'NOMA’LUM'
         }
         context.user_data['photos'] = []
         update.message.reply_text("📸 Mashina rasmlarini yuboring. Tayyor bo‘lsa, 'Finish' deb yozing.")
@@ -100,7 +96,9 @@ def ask_car_number(update: Update, context: CallbackContext):
             'year': idx_year,
             'kraska': idx_kraska,
             'probeg': idx_probeg,
-            'narx': idx_narx
+            'yoqilgi': idx_yog,
+            'olingan_narx': idx_olingan_narx,
+            'sot_narx': idx_sot_narx
         }
         update.message.reply_text(
             "🔎 Bir nechta shu raqamli mashina topildi. Iltimos, avtomobil yilini kiriting. "
@@ -126,7 +124,9 @@ def ask_car_year(update: Update, context: CallbackContext):
         'year': selected[idx['year']] if len(selected) > idx['year'] else 'NOMA’LUM',
         'kraska': selected[idx['kraska']] if len(selected) > idx['kraska'] else 'NOMA’LUM',
         'probeg': selected[idx['probeg']] if len(selected) > idx['probeg'] else 'NOMA’LUM',
-        'narx': selected[idx['narx']] if len(selected) > idx['narx'] else 'NOMA’LUM'
+        'yoqilgi': selected[idx['yoqilgi']] if len(selected) > idx['yoqilgi'] else 'NOMA’LUM',
+        'olingan_narx': selected[idx['olingan_narx']] if len(selected) > idx['olingan_narx'] else 'NOMA’LUM',
+        'sot_narx': selected[idx['sot_narx']] if len(selected) > idx['sot_narx'] else 'NOMA’LUM'
     }
     context.user_data['photos'] = []
     update.message.reply_text("📸 Mashina rasmlarini yuboring. Tayyor bo‘lsa, 'Finish' deb yozing.")
@@ -162,19 +162,23 @@ def get_5(update: Update, context: CallbackContext):
     context.user_data['pay5'] = update.message.text
     c = context.user_data['car']
     photos = context.user_data['photos']
-    initial = format_summa(context.user_data['initial'])  # boshlang‘ich uchun bo‘sh joy, oxirida $ bo‘ladi
+    initial = format_summa(context.user_data['initial'])
     pay3 = format_summa(context.user_data['pay3'], point_format=True)
     pay4 = format_summa(context.user_data['pay4'], point_format=True)
     pay5 = format_summa(context.user_data['pay5'], point_format=True)
-    probeg = format_summa(c['probeg'], point_format=True)  # probeg ham nuqtali ko‘rinishda
-    narx = format_summa(c['narx'], point_format=True)      # narx ham nuqtali ko‘rinishda
+    probeg = format_summa(c['probeg'], point_format=True)
+    # yangi ma'lumotlar
+    olingan_narx = format_summa(c['olingan_narx'], point_format=True)
+    sot_narx = format_summa(c['sot_narx'], point_format=True)
 
     post = (
         f"<b>🚗 #{c['model']}</b>\n"
         f"<b>📆 {c['year']} yil</b>\n"
         f"<b>💎 {c['kraska']}</b>\n"
         f"<b>🏎 {probeg}km</b>\n"
-        f"<b>💰 {narx}$</b>\n"
+        f"<b>⚡️ Yoqilg'i turi: {c['yoqilgi']}</b>\n"
+        f"<b>💰 Olingan narxi: {olingan_narx}$</b>\n"
+        f"<b>💰 Sotiladigan narxi: {sot_narx}$</b>\n"
         f"\n"
         f"<b>🏦 Kapital bank</b>\n"
         f"\n"
