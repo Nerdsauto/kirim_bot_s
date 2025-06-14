@@ -7,7 +7,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 # 1. Telegram bot token
-TOKEN = "8183691124:AAHEtu-NYALVH9qcYoIGeRGO4DBHsGnY4pU"
+TOKEN = "8183691124:AAHEtcYoIGeRGO4DBHsGnY4pU"
 
 # 2. Remove webhook to avoid polling conflict
 bot = Bot(token=TOKEN)
