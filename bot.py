@@ -146,12 +146,11 @@ def get_images(update: Update, context: CallbackContext):
             f"<b>📆 {c['year']} yil</b>\n"
             f"<b>💎 {c['kraska']}</b>\n"
             f"<b>🏎 {probeg}km</b>\n"
-            f"<b>⚡️ Yoqilg'i turi: {c['yoqilgi']}</b>\n"
+            f"<b>⛽ Yoqilg'i turi: {c['yoqilgi']}</b>\n"
+            f"\n"
             f"<b>💰 Olingan narxi: {olingan_narx}$</b>\n"
             f"<b>💰 Sotiladigan narxi: {sot_narx}$</b>\n"
             f"\n"
-            f"<b>+998333152222</b>\n"
-            f"<b>https://t.me/real_auto_uz</b>"
         )
 
         if len(photos) == 1:
