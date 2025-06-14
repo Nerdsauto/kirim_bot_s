@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
 
 # C extensions
 *.so
@@ -128,6 +129,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+creds.json
 .env
 .venv
 env/
@@ -150,6 +152,9 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# json
+creds.json
 
 # Pyre type checker
 .pyre/
