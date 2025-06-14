@@ -21,12 +21,12 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapi
 creds = Credentials.from_service_account_info(creds_info, scopes=SCOPES)
 
 client = gspread.authorize(creds)
-sheet = client.open_by_key("YOUR_SHEET_KEY").worksheet("realauto")
+sheet = client.open_by_key("12H87uDfhvYDyfuCMEHZJ4WDdcIvHpjn1xp2luvrbLaM").worksheet("realauto")
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-ASK_CAR_NUMBER, ASK_CAR_YEAR, GET_IMAGES, GET_INITIAL, GET_3, GET_4, GET_5 = range(7)
+ASK_CAR_NUMBER, ASK_CAR_YEAR, GET_IMAGES = range(3)
 
 def format_summa(summa, point_format=False):
     try:
@@ -58,8 +58,8 @@ def ask_car_number(update: Update, context: CallbackContext):
     idx_kraska = 6 # G
     idx_probeg = 5 # F
     idx_yog = 15   # O (Yoqilg'i turi)
-    idx_olingan_narx = 7 # G
-    idx_sot_narx = 8     # H
+    idx_olingan_narx = 7 # H
+    idx_sot_narx = 8     # I
 
     matches = [
         row for row in rows[1:]
@@ -135,74 +135,40 @@ def ask_car_year(update: Update, context: CallbackContext):
 def get_images(update: Update, context: CallbackContext):
     text = update.message.text
     if text and text.lower() == 'finish':
-        update.message.reply_text("💵 Boshlang‘ich to‘lov summasini kiriting ($):")
-        return GET_INITIAL
+        c = context.user_data['car']
+        photos = context.user_data['photos']
+        probeg = format_summa(c['probeg'], point_format=True)
+        olingan_narx = format_summa(c['olingan_narx'], point_format=True)
+        sot_narx = format_summa(c['sot_narx'], point_format=True)
+
+        post = (
+            f"<b>🚗 #{c['model']}</b>\n"
+            f"<b>📆 {c['year']} yil</b>\n"
+            f"<b>💎 {c['kraska']}</b>\n"
+            f"<b>🏎 {probeg}km</b>\n"
+            f"<b>⚡️ Yoqilg'i turi: {c['yoqilgi']}</b>\n"
+            f"<b>💰 Olingan narxi: {olingan_narx}$</b>\n"
+            f"<b>💰 Sotiladigan narxi: {sot_narx}$</b>\n"
+            f"\n"
+            f"<b>+998333152222</b>\n"
+            f"<b>https://t.me/real_auto_uz</b>"
+        )
+
+        if len(photos) == 1:
+            update.message.reply_photo(photos[0], caption=post, parse_mode='HTML')
+        elif len(photos) > 1:
+            media = [InputMediaPhoto(fid) for fid in photos]
+            media[0].caption = post
+            media[0].parse_mode = 'HTML'
+            update.message.reply_media_group(media)
+        else:
+            update.message.reply_text(post, parse_mode='HTML')
+        return ConversationHandler.END
     if update.message.photo:
         context.user_data['photos'].append(update.message.photo[-1].file_id)
         return GET_IMAGES
     update.message.reply_text("❗ Foto yuboring yoki 'Finish' deb yozing.")
     return GET_IMAGES
-
-def get_initial(update: Update, context: CallbackContext):
-    context.user_data['initial'] = update.message.text
-    update.message.reply_text("💰 3 yillik oylik to‘lovni kiriting ($):")
-    return GET_3
-
-def get_3(update: Update, context: CallbackContext):
-    context.user_data['pay3'] = update.message.text
-    update.message.reply_text("💰 4 yillik oylik to‘lovni kiriting ($):")
-    return GET_4
-
-def get_4(update: Update, context: CallbackContext):
-    context.user_data['pay4'] = update.message.text
-    update.message.reply_text("💰 5 yillik oylik to‘lovni kiriting ($):")
-    return GET_5
-
-def get_5(update: Update, context: CallbackContext):
-    context.user_data['pay5'] = update.message.text
-    c = context.user_data['car']
-    photos = context.user_data['photos']
-    initial = format_summa(context.user_data['initial'])
-    pay3 = format_summa(context.user_data['pay3'], point_format=True)
-    pay4 = format_summa(context.user_data['pay4'], point_format=True)
-    pay5 = format_summa(context.user_data['pay5'], point_format=True)
-    probeg = format_summa(c['probeg'], point_format=True)
-    # yangi ma'lumotlar
-    olingan_narx = format_summa(c['olingan_narx'], point_format=True)
-    sot_narx = format_summa(c['sot_narx'], point_format=True)
-
-    post = (
-        f"<b>🚗 #{c['model']}</b>\n"
-        f"<b>📆 {c['year']} yil</b>\n"
-        f"<b>💎 {c['kraska']}</b>\n"
-        f"<b>🏎 {probeg}km</b>\n"
-        f"<b>⚡️ Yoqilg'i turi: {c['yoqilgi']}</b>\n"
-        f"<b>💰 Olingan narxi: {olingan_narx}$</b>\n"
-        f"<b>💰 Sotiladigan narxi: {sot_narx}$</b>\n"
-        f"\n"
-        f"<b>🏦 Kapital bank</b>\n"
-        f"\n"
-        f"<b>Boshlang‘ich : {initial} $</b>\n"
-        f"\n"
-        f"<b>3 yil: {pay3} $</b>so'm\n"
-        f"<b>4 yil: {pay4} $</b>so'm\n"
-        f"<b>5 yil: {pay5} $</b>so'm\n"
-        f"\n"
-        f"<b>+998333152222</b>\n"
-        f"\n"
-        f"<b>https://t.me/real_auto_uz</b>"
-    )
-
-    if len(photos) == 1:
-        update.message.reply_photo(photos[0], caption=post, parse_mode='HTML')
-    elif len(photos) > 1:
-        media = [InputMediaPhoto(fid) for fid in photos]
-        media[0].caption = post
-        media[0].parse_mode = 'HTML'
-        update.message.reply_media_group(media)
-    else:
-        update.message.reply_text(post, parse_mode='HTML')
-    return ConversationHandler.END
 
 def echo(update: Update, context: CallbackContext):
     update.message.reply_text("❗Menyu bo‘yicha davom eting yoki /start yozing.")
@@ -217,10 +183,6 @@ def main():
             ASK_CAR_NUMBER: [MessageHandler(Filters.text & ~Filters.command, ask_car_number)],
             ASK_CAR_YEAR: [MessageHandler(Filters.text & ~Filters.command, ask_car_year)],
             GET_IMAGES: [MessageHandler((Filters.photo | Filters.text) & ~Filters.command, get_images)],
-            GET_INITIAL: [MessageHandler(Filters.text & ~Filters.command, get_initial)],
-            GET_3: [MessageHandler(Filters.text & ~Filters.command, get_3)],
-            GET_4: [MessageHandler(Filters.text & ~Filters.command, get_4)],
-            GET_5: [MessageHandler(Filters.text & ~Filters.command, get_5)]
         },
         fallbacks=[CommandHandler('start', start)]
     )
