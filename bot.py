@@ -4,12 +4,14 @@ import time
 import logging
 import gspread
 from telegram import Bot
+from googleapiclient.discovery import build
+from google.oauth2.service_account import Credentials
 
 # --- Config ---
 TOKEN = "7976266533:AAH66Fal4sCsKwtlAmUiK5tzSGYMR6f86NY"
 GROUP_CHAT_ID = -1002878163620
 GOOGLE_SHEET_KEY = "12H87uDfhvYDyfuCMEHZJ4WDdcIvHpjn1xp2luvrbLaM"
-DRIVE_FOLDER_ID = "https://drive.google.com/drive/folders/1zy0hVpoATmkp8tPF3bsdVyaiofFrWdc3?usp=sharing"  # Google Drive papka ID sini shu yerga yozing
+DRIVE_FOLDER_ID = "1zy0hVpoATmkp8tPF3bsdVyaiofFrWdc3"  # Papka ID, to'g'ri formatda
 
 CHECK_INTERVAL = 60
 
@@ -24,11 +26,13 @@ if not creds_json:
     exit(1)
 creds_info = json.loads(creds_json)
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-from google.oauth2.service_account import Credentials
 
 creds = Credentials.from_service_account_info(creds_info, scopes=SCOPES)
 client = gspread.authorize(creds)
 sheet = client.open_by_key(GOOGLE_SHEET_KEY).worksheet("realauto")
+
+# --- Google Drive API setup ---
+drive_service = build('drive', 'v3', credentials=creds)
 
 # --- Telegram Bot setup ---
 bot = Bot(token=TOKEN)
@@ -82,9 +86,14 @@ def make_post_text(row):
 def make_drive_public_url(file_id):
     return f"https://drive.google.com/uc?export=view&id={file_id}"
 
-def is_drive_file_id(s):
-    # Google Drive file id are usually 20+ chars, only letters, digits, - and _
-    return s and len(s) >= 20 and all(c.isalnum() or c in ['-', '_'] for c in s)
+def get_file_id_by_name(file_name, folder_id):
+    # Papkadan fayl nomi orqali Google Drive file ID ni topadi
+    query = f"'{folder_id}' in parents and name='{file_name}' and trashed = false"
+    results = drive_service.files().list(q=query, fields="files(id)", pageSize=1).execute()
+    files = results.get('files', [])
+    if files:
+        return files[0]['id']
+    return None
 
 def main_loop():
     global posted_numbers
@@ -108,15 +117,19 @@ def main_loop():
                         and car_number not in posted_numbers
                     ):
                         post_text = make_post_text(row)
-                        rasm = row[idx_rasm] if len(row) > idx_rasm else None
+                        rasm_nomi = row[idx_rasm] if len(row) > idx_rasm else None
 
-                        # Rasm - Google Drive file ID bo'lsa, public link yasaymiz
                         photo_url = None
-                        if rasm:
-                            if rasm.startswith("http"):
-                                photo_url = rasm
-                            elif is_drive_file_id(rasm):
-                                photo_url = make_drive_public_url(rasm)
+                        if rasm_nomi:
+                            if rasm_nomi.startswith("http"):
+                                photo_url = rasm_nomi
+                            else:
+                                file_id = get_file_id_by_name(rasm_nomi, DRIVE_FOLDER_ID)
+                                if file_id:
+                                    photo_url = make_drive_public_url(file_id)
+                                else:
+                                    logger.warning(f"Image file '{rasm_nomi}' not found in Drive folder.")
+
                         if photo_url:
                             try:
                                 bot.send_photo(
