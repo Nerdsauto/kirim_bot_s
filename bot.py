@@ -61,7 +61,7 @@ def make_post_text(row):
     idx_probeg = 5
     idx_yoqilgi = 15
     idx_olingan_narx = 7
-    idx_sot_narx = 8
+    idx_sot_narx = 11
 
     probeg = format_summa(row[idx_probeg], point_format=True) if len(row) > idx_probeg else "NOMA’LUM"
     olingan_narx = format_summa(row[idx_olingan_narx], point_format=True) if len(row) > idx_olingan_narx else "NOMA’LUM"
@@ -73,8 +73,8 @@ def make_post_text(row):
         f"<b>💎 {row[idx_kraska] if len(row) > idx_kraska else 'NOMA’LUM'}</b>\n"
         f"<b>🏎 {probeg}km</b>\n"
         f"<b>⚡️ Yoqilg'i turi: {row[idx_yoqilgi] if len(row) > idx_yoqilgi else 'NOMA’LUM'}</b>\n"
-        f"<b>💰 Olingan narxi: {olingan_narx}$</b>\n"
-        f"<b>💰 Sotiladigan narxi: {sot_narx}$</b>\n"
+        f"<b>💰 Olingan narxi: {olingan_narx}</b>\n"
+        f"<b>💰 Sotilgan narxi: {sot_narx}</b>\n"
         f"\n"
     )
     return post
