@@ -7,7 +7,7 @@ from telegram import Bot
 
 # --- Config ---
 TOKEN = "7976266533:AAH66Fal4sCsKwtlAmUiK5tzSGYMR6f86NY"
-GROUP_CHAT_ID = -1002122162040  # <-- O'zingizning guruh chat id'ingizni yozing!
+GROUP_CHAT_ID = 1002122162040  # <-- O'zingizning guruh chat id'ingizni yozing!
 GOOGLE_SHEET_KEY = "12H87uDfhvYDyfuCMEHZJ4WDdcIvHpjn1xp2luvrbLaM"
 
 CHECK_INTERVAL = 60  # soniyalarda, necha sekundda bir tekshirish
