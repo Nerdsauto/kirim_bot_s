@@ -86,8 +86,9 @@ def make_post_text(row):
 def make_drive_public_url(file_id):
     return f"https://drive.google.com/uc?export=view&id={file_id}"
 
-def get_file_id_by_name(file_name, folder_id):
-    # Papkadan fayl nomi orqali Google Drive file ID ni topadi
+def get_file_id_by_name(file_path, folder_id):
+    # Fayl yo'li (subfolder) bo'lsa ham, faqat nomini olib, papkada qidiradi
+    file_name = os.path.basename(file_path)
     query = f"'{folder_id}' in parents and name='{file_name}' and trashed = false"
     results = drive_service.files().list(q=query, fields="files(id)", pageSize=1).execute()
     files = results.get('files', [])
