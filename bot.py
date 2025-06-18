@@ -7,10 +7,11 @@ from telegram import Bot
 
 # --- Config ---
 TOKEN = "7976266533:AAH66Fal4sCsKwtlAmUiK5tzSGYMR6f86NY"
-GROUP_CHAT_ID = -1002878163620  # <-- O'zingizning guruh chat id'ingizni yozing!
+GROUP_CHAT_ID = -1002878163620
 GOOGLE_SHEET_KEY = "12H87uDfhvYDyfuCMEHZJ4WDdcIvHpjn1xp2luvrbLaM"
+DRIVE_FOLDER_ID = "https://drive.google.com/drive/folders/1zy0hVpoATmkp8tPF3bsdVyaiofFrWdc3?usp=sharing"  # Google Drive papka ID sini shu yerga yozing
 
-CHECK_INTERVAL = 60  # soniyalarda, necha sekundda bir tekshirish
+CHECK_INTERVAL = 60
 
 # --- Logging ---
 logging.basicConfig(level=logging.INFO)
@@ -27,12 +28,11 @@ from google.oauth2.service_account import Credentials
 
 creds = Credentials.from_service_account_info(creds_info, scopes=SCOPES)
 client = gspread.authorize(creds)
-sheet = client.open_by_key("12H87uDfhvYDyfuCMEHZJ4WDdcIvHpjn1xp2luvrbLaM").worksheet("realauto")
+sheet = client.open_by_key(GOOGLE_SHEET_KEY).worksheet("realauto")
 
 # --- Telegram Bot setup ---
 bot = Bot(token=TOKEN)
 
-# --- Faylda post qilingan mashinalar ro'yxatini saqlash ---
 POSTED_FILE = "posted_numbers.json"
 if os.path.exists(POSTED_FILE):
     with open(POSTED_FILE, "r") as f:
@@ -54,15 +54,14 @@ def format_summa(summa, point_format=False):
         return summa
 
 def make_post_text(row):
-    # Ustun indekslari (A=0)
-    idx_model = 1    # B
-    idx_year = 4     # E
-    idx_number = 3   # D
-    idx_kraska = 6   # G
-    idx_probeg = 5   # F
-    idx_yoqilgi = 15 # P ("Yoqilg'i turi")
-    idx_olingan_narx = 7  # H
-    idx_sot_narx = 8      # I
+    idx_model = 1
+    idx_year = 4
+    idx_number = 3
+    idx_kraska = 6
+    idx_probeg = 5
+    idx_yoqilgi = 15
+    idx_olingan_narx = 7
+    idx_sot_narx = 8
 
     probeg = format_summa(row[idx_probeg], point_format=True) if len(row) > idx_probeg else "NOMA’LUM"
     olingan_narx = format_summa(row[idx_olingan_narx], point_format=True) if len(row) > idx_olingan_narx else "NOMA’LUM"
@@ -80,6 +79,13 @@ def make_post_text(row):
     )
     return post
 
+def make_drive_public_url(file_id):
+    return f"https://drive.google.com/uc?export=view&id={file_id}"
+
+def is_drive_file_id(s):
+    # Google Drive file id are usually 20+ chars, only letters, digits, - and _
+    return s and len(s) >= 20 and all(c.isalnum() or c in ['-', '_'] for c in s)
+
 def main_loop():
     global posted_numbers
     logger.info("Bot started. Monitoring sheet for sold cars...")
@@ -88,9 +94,9 @@ def main_loop():
             rows = sheet.get_all_values()
             for row in rows[1:]:
                 try:
-                    idx_number = 3   # D ustun (mashina raqami)
-                    idx_holat = 10   # K ustun ("Holati")
-                    idx_rasm = 16    # Q ustun ("Rasm")
+                    idx_number = 3   # D
+                    idx_holat = 10   # K
+                    idx_rasm = 16    # Q
 
                     car_number = row[idx_number] if len(row) > idx_number else None
                     holat = row[idx_holat] if len(row) > idx_holat else None
@@ -104,11 +110,18 @@ def main_loop():
                         post_text = make_post_text(row)
                         rasm = row[idx_rasm] if len(row) > idx_rasm else None
 
+                        # Rasm - Google Drive file ID bo'lsa, public link yasaymiz
+                        photo_url = None
                         if rasm:
+                            if rasm.startswith("http"):
+                                photo_url = rasm
+                            elif is_drive_file_id(rasm):
+                                photo_url = make_drive_public_url(rasm)
+                        if photo_url:
                             try:
                                 bot.send_photo(
                                     chat_id=GROUP_CHAT_ID,
-                                    photo=rasm,
+                                    photo=photo_url,
                                     caption=post_text,
                                     parse_mode="HTML"
                                 )
