@@ -27,7 +27,7 @@ from google.oauth2.service_account import Credentials
 
 creds = Credentials.from_service_account_info(creds_info, scopes=SCOPES)
 client = gspread.authorize(creds)
-sheet = client.open_by_key(12H87uDfhvYDyfuCMEHZJ4WDdcIvHpjn1xp2luvrbLaM).worksheet("realauto")
+sheet = client.open_by_key("12H87uDfhvYDyfuCMEHZJ4WDdcIvHpjn1xp2luvrbLaM").worksheet("realauto")
 
 # --- Telegram Bot setup ---
 bot = Bot(token=TOKEN)
