@@ -76,9 +76,9 @@ def make_post_text(row):
         f"<b>📆 {row[idx_year] if len(row) > idx_year else 'NOMA’LUM'} yil</b>\n"
         f"<b>💎 {row[idx_kraska] if len(row) > idx_kraska else 'NOMA’LUM'}</b>\n"
         f"<b>🏎 {probeg}km</b>\n"
-        f"<b>⚡️ Yoqilg'i turi: {row[idx_yoqilgi] if len(row) > idx_yoqilgi else 'NOMA’LUM'}</b>\n"
+        f"<b>⛽ Yoqilg'i turi: {row[idx_yoqilgi] if len(row) > idx_yoqilgi else 'NOMA’LUM'}</b>\n"
         f"<b>💰 Olingan narxi: {olingan_narx}</b>\n"
-        f"<b>💰 Sotilgan narxi: {sot_narx}</b>\n"
+        f"<b>🤝 Sotilgan narxi: {sot_narx}</b>\n"
         f"\n"
     )
     return post
