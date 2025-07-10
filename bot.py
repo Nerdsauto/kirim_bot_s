@@ -58,7 +58,7 @@ def format_summa(summa, point_format=False):
         return summa
 
 def make_post_text(row):
-    idx_model = 1
+    idx_model = 2
     idx_year = 5
     idx_number = 4
     idx_kraska = 7
