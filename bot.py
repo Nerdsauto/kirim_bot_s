@@ -59,12 +59,12 @@ def format_summa(summa, point_format=False):
 
 def make_post_text(row):
     idx_model = 1
-    idx_year = 4
-    idx_number = 3
-    idx_kraska = 6
-    idx_probeg = 5
+    idx_year = 5
+    idx_number = 4
+    idx_kraska = 7
+    idx_probeg = 6
     idx_yoqilgi = 15
-    idx_olingan_narx = 7
+    idx_olingan_narx = 8
     idx_sot_narx = 11
 
     probeg = format_summa(row[idx_probeg], point_format=True) if len(row) > idx_probeg else "NOMA’LUM"
@@ -104,9 +104,9 @@ def main_loop():
             rows = sheet.get_all_values()
             for row in rows[1:]:
                 try:
-                    idx_number = 3   # D
+                    idx_number = 4   # D
                     idx_holat = 10   # K
-                    idx_rasm = 16    # Q
+                    idx_rasm = 17    # Q
 
                     car_number = row[idx_number] if len(row) > idx_number else None
                     holat = row[idx_holat] if len(row) > idx_holat else None
