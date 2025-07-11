@@ -9,11 +9,15 @@ from google.oauth2.service_account import Credentials
 
 # --- Config ---
 TOKEN = "7976266533:AAH66Fal4sCsKwtlAmUiK5tzSGYMR6f86NY"
-GROUP_CHAT_ID = -1002878163620
 GOOGLE_SHEET_KEY = "12H87uDfhvYDyfuCMEHZJ4WDdcIvHpjn1xp2luvrbLaM"
-DRIVE_FOLDER_ID = "1zy0hVpoATmkp8tPF3bsdVyaiofFrWdc3"  # Papka ID, to'g'ri formatda
+DRIVE_FOLDER_ID = "1zy0hVpoATmkp8tPF3bsdVyaiofFrWdc3"
 
 CHECK_INTERVAL = 60
+
+# --- Supergroup Chat ID va Topic IDlar ---
+CHAT_ID = -1002625034435      # Sizning superguruh chat ID (faqat bitta!)
+TOPIC_ID_MAVJUD = 440         # "mavjud" mashinalar topic ID
+TOPIC_ID_SOTILGAN = 348       # "sotilgan" mashinalar topic ID
 
 # --- Logging ---
 logging.basicConfig(level=logging.INFO)
@@ -98,7 +102,7 @@ def get_file_id_by_name(file_path, folder_id):
 
 def main_loop():
     global posted_numbers
-    logger.info("Bot started. Monitoring sheet for cars...")
+    logger.info("Bot started. Monitoring sheet for cars (topics)...")
     while True:
         try:
             rows = sheet.get_all_values()
@@ -130,25 +134,33 @@ def main_loop():
                                 else:
                                     logger.warning(f"Image file '{rasm_nomi}' not found in Drive folder.")
 
+                        # Topic ID ni holatga qarab tanlash
+                        if holat == "sotilgan":
+                            topic_id = TOPIC_ID_SOTILGAN
+                        else:
+                            topic_id = TOPIC_ID_MAVJUD
+
                         if photo_url:
                             try:
                                 bot.send_photo(
-                                    chat_id=GROUP_CHAT_ID,
+                                    chat_id=CHAT_ID,
                                     photo=photo_url,
                                     caption=post_text,
-                                    parse_mode="HTML"
+                                    parse_mode="HTML",
+                                    message_thread_id=topic_id
                                 )
-                                logger.info(f"Posted car {car_number}")
+                                logger.info(f"Posted car {car_number} to topic {topic_id}")
                             except Exception as e:
                                 logger.error(f"Error sending photo for {car_number}: {e}")
                         else:
                             try:
                                 bot.send_message(
-                                    chat_id=GROUP_CHAT_ID,
+                                    chat_id=CHAT_ID,
                                     text=post_text,
-                                    parse_mode="HTML"
+                                    parse_mode="HTML",
+                                    message_thread_id=topic_id
                                 )
-                                logger.info(f"Posted car {car_number} (text only)")
+                                logger.info(f"Posted car {car_number} (text only) to topic {topic_id}")
                             except Exception as e:
                                 logger.error(f"Error sending text for {car_number}: {e}")
 
