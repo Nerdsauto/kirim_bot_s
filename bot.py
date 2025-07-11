@@ -57,7 +57,7 @@ def format_summa(summa, point_format=False):
     except Exception:
         return summa
 
-def make_post_text(row):
+def make_post_text(row, holat):
     idx_model = 2
     idx_year = 5
     idx_number = 4
@@ -78,16 +78,16 @@ def make_post_text(row):
         f"<b>🏎 {probeg}km</b>\n"
         f"<b>⛽ Yoqilg'i turi: {row[idx_yoqilgi] if len(row) > idx_yoqilgi else 'NOMA’LUM'}</b>\n"
         f"<b>💰 Olingan narxi: {olingan_narx}</b>\n"
-        f"<b>🤝 Sotilgan narxi: {sot_narx}</b>\n"
-        f"\n"
     )
+    if holat == "sotilgan":
+        post += f"<b>🤝 Sotilgan narxi: {sot_narx}</b>\n"
+    post += "\n"
     return post
 
 def make_drive_public_url(file_id):
     return f"https://drive.google.com/uc?export=view&id={file_id}"
 
 def get_file_id_by_name(file_path, folder_id):
-    # Fayl yo'li (subfolder) bo'lsa ham, faqat nomini olib, papkada qidiradi
     file_name = os.path.basename(file_path)
     query = f"'{folder_id}' in parents and name='{file_name}' and trashed = false"
     results = drive_service.files().list(q=query, fields="files(id)", pageSize=1).execute()
@@ -98,7 +98,7 @@ def get_file_id_by_name(file_path, folder_id):
 
 def main_loop():
     global posted_numbers
-    logger.info("Bot started. Monitoring sheet for sold cars...")
+    logger.info("Bot started. Monitoring sheet for cars...")
     while True:
         try:
             rows = sheet.get_all_values()
@@ -109,15 +109,14 @@ def main_loop():
                     idx_rasm = 18    # Q
 
                     car_number = row[idx_number] if len(row) > idx_number else None
-                    holat = row[idx_holat] if len(row) > idx_holat else None
+                    holat = row[idx_holat].strip().lower() if len(row) > idx_holat and row[idx_holat] else None
 
                     if (
                         car_number
-                        and holat
-                        and holat.strip().lower() == "sotilgan"
+                        and holat in ["mavjud", "sotilgan"]
                         and car_number not in posted_numbers
                     ):
-                        post_text = make_post_text(row)
+                        post_text = make_post_text(row, holat)
                         rasm_nomi = row[idx_rasm] if len(row) > idx_rasm else None
 
                         photo_url = None
