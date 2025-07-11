@@ -63,9 +63,9 @@ def make_post_text(row):
     idx_number = 4
     idx_kraska = 7
     idx_probeg = 6
-    idx_yoqilgi = 15
+    idx_yoqilgi = 16
     idx_olingan_narx = 8
-    idx_sot_narx = 11
+    idx_sot_narx = 12
 
     probeg = format_summa(row[idx_probeg], point_format=True) if len(row) > idx_probeg else "NOMA’LUM"
     olingan_narx = format_summa(row[idx_olingan_narx], point_format=True) if len(row) > idx_olingan_narx else "NOMA’LUM"
@@ -105,8 +105,8 @@ def main_loop():
             for row in rows[1:]:
                 try:
                     idx_number = 4   # D
-                    idx_holat = 10   # K
-                    idx_rasm = 17    # Q
+                    idx_holat = 11   # K
+                    idx_rasm = 18    # Q
 
                     car_number = row[idx_number] if len(row) > idx_number else None
                     holat = row[idx_holat] if len(row) > idx_holat else None
